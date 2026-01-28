@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSessionStore } from '@/stores/session';
 import { useDeviceOrientation } from '@/hooks/useDeviceOrientation';
@@ -77,6 +77,16 @@ export default function CompassView({
   const members = useSessionStore((s) => s.members);
   const { heading } = useDeviceOrientation();
 
+  const [viewportSize, setViewportSize] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    const update = () => setViewportSize({ w: window.innerWidth, h: window.innerHeight });
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
+  const radiusPx = Math.min(viewportSize.w, viewportSize.h) / 2;
+
   const otherIds = useMemo(
     () => Object.keys(members).filter((id) => id !== myId),
     [members, myId],
@@ -87,16 +97,16 @@ export default function CompassView({
       {/* Center dot — you */}
       <div className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white" />
 
-      {/* Friend orbs */}
+      {/* Friend orbs — only render after viewport is measured */}
       <AnimatePresence>
-        {otherIds.map((id) => (
+        {viewportSize.w > 0 && otherIds.map((id) => (
           <MemberOrb
             key={id}
             memberId={id}
             myLat={myLat}
             myLng={myLng}
             heading={heading}
-            radiusPx={Math.min(window.innerWidth, window.innerHeight) / 2}
+            radiusPx={radiusPx}
           />
         ))}
       </AnimatePresence>
