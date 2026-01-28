@@ -1,1 +1,105 @@
-// Phase 2F: Orb container + positioning
+'use client';
+
+import { useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useSessionStore } from '@/stores/session';
+import { useDeviceOrientation } from '@/hooks/useDeviceOrientation';
+import { useBearing } from '@/hooks/useBearing';
+import { getOrbProps } from '@/lib/distance';
+import { orbSpring } from '@/lib/springs';
+import Orb from './Orb';
+
+/** Convert polar (angle in degrees, distance in meters) to x,y pixel offsets from center */
+function polarToXY(
+  angleDeg: number,
+  distanceM: number,
+  radiusPx: number,
+): { x: number; y: number } {
+  // Scale distance: use log scale so nearby friends spread out, far ones compress
+  // Max useful range ~500m, clamp at 95% of radius
+  const maxDistance = 500;
+  const clamped = Math.min(distanceM, maxDistance);
+  const normalized = Math.log1p(clamped) / Math.log1p(maxDistance);
+  const r = normalized * radiusPx * 0.95;
+
+  const rad = ((angleDeg - 90) * Math.PI) / 180; // -90 so 0° = up
+  return { x: r * Math.cos(rad), y: r * Math.sin(rad) };
+}
+
+function MemberOrb({
+  memberId,
+  myLat,
+  myLng,
+  heading,
+  radiusPx,
+}: {
+  memberId: string;
+  myLat: number;
+  myLng: number;
+  heading: number | null;
+  radiusPx: number;
+}) {
+  const member = useSessionStore((s) => s.members[memberId]);
+  const { angle, distance } = useBearing(myLat, myLng, member.lat, member.lng, heading);
+  const props = getOrbProps(distance);
+  const { x, y } = polarToXY(angle, distance, radiusPx);
+
+  return (
+    <motion.div
+      className="absolute"
+      style={{ left: '50%', top: '50%' }}
+      animate={{ x, y }}
+      transition={orbSpring}
+    >
+      <Orb
+        color={member.color}
+        size={props.size}
+        glowIntensity={props.glowIntensity}
+        pulseSpeed={props.pulseSpeed}
+        name={member.name}
+        distance={distance}
+        showName={props.showName}
+        angle={angle}
+        label={props.label}
+      />
+    </motion.div>
+  );
+}
+
+export default function CompassView({
+  myLat,
+  myLng,
+}: {
+  myLat: number;
+  myLng: number;
+}) {
+  const myId = useSessionStore((s) => s.myId);
+  const members = useSessionStore((s) => s.members);
+  const { heading } = useDeviceOrientation();
+
+  const otherIds = useMemo(
+    () => Object.keys(members).filter((id) => id !== myId),
+    [members, myId],
+  );
+
+  return (
+    <div className="relative h-full w-full overflow-hidden bg-black">
+      {/* Center dot — you */}
+      <div className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white" />
+
+      {/* Friend orbs */}
+      <AnimatePresence>
+        {otherIds.map((id) => (
+          <MemberOrb
+            key={id}
+            memberId={id}
+            myLat={myLat}
+            myLng={myLng}
+            heading={heading}
+            radiusPx={Math.min(window.innerWidth, window.innerHeight) / 2}
+          />
+        ))}
+      </AnimatePresence>
+    </div>
+  );
+}
