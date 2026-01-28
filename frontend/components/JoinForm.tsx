@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAvailableColors } from '@/lib/colors';
+import type { Member } from '@/lib/types';
 import { useSocket } from '@/hooks/useSocket';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useDeviceOrientation } from '@/hooks/useDeviceOrientation';
@@ -46,11 +47,12 @@ export default function JoinForm({ mode }: JoinFormProps) {
         ? { name: name.trim(), color }
         : { name: name.trim(), color, code };
 
-    emit(event, payload, (result: { code: string; memberId: string; members?: any[] }) => {
+    emit(event, payload, (result: { code: string; memberId: string; members?: Member[] }) => {
       setSession(result.code, result.memberId, name.trim(), color);
       if (result.members) {
-        result.members.forEach((m: any) => addMember(m));
+        result.members.forEach((m) => addMember(m));
       }
+      localStorage.setItem('cc-session', JSON.stringify({ code: result.code, memberId: result.memberId }));
       router.push(`/session/${result.code}`);
     });
   };

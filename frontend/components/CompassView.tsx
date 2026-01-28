@@ -94,6 +94,14 @@ export default function CompassView({
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-black">
+      {/* Edge vignette */}
+      <div
+        className="pointer-events-none absolute inset-0 z-20"
+        style={{
+          boxShadow: 'inset 0 0 80px 30px rgba(255,255,255,0.04)',
+        }}
+      />
+
       {/* Center dot — you */}
       <div className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white" />
 

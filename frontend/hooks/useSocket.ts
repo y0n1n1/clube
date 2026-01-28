@@ -20,7 +20,7 @@ export function useSocket(url?: string): UseSocketReturn {
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    if (!globalSocket || globalSocket.io.uri !== resolvedUrl) {
+    if (!globalSocket || (globalSocket.io as unknown as { uri: string }).uri !== resolvedUrl) {
       globalSocket = io(resolvedUrl, { autoConnect: true });
     }
 

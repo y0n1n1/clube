@@ -5,8 +5,12 @@ import cors from 'cors';
 import {
   createSession,
   joinSession,
+  rejoinSession,
   leaveSession,
+  markDisconnected,
+  cleanupDisconnected,
   updateLocation,
+  addSignalEvent,
   findMemberBySocketId,
   getMemberSession,
 } from './sessionManager';
@@ -22,6 +26,15 @@ const io = new Server(httpServer, {
 app.get('/', (_req, res) => {
   res.send('Clubbing Compass server running');
 });
+
+// Cleanup disconnected members every 15s
+setInterval(() => {
+  const removed = cleanupDisconnected();
+  for (const { code, memberId, memberName } of removed) {
+    io.to(code).emit('member-left', { id: memberId });
+    console.log(`[cleanup] removed ${memberName} from session ${code}`);
+  }
+}, 15_000);
 
 io.on('connection', (socket) => {
   console.log(`[connect] ${socket.id}`);
@@ -45,7 +58,6 @@ io.on('connection', (socket) => {
       memberId = result.memberId;
       socket.join(data.code);
 
-      // Notify others in the session
       socket.to(data.code).emit('member-joined', {
         id: memberId,
         name: data.name,
@@ -56,6 +68,18 @@ io.on('connection', (socket) => {
       console.log(`[join] session=${data.code} member=${memberId}`);
     } catch (err: any) {
       socket.emit('error', { message: err.message });
+    }
+  });
+
+  socket.on('rejoin-session', (data: { code: string; memberId: string }, callback) => {
+    try {
+      const result = rejoinSession(data.code, data.memberId, socket.id);
+      memberId = result.memberId;
+      socket.join(data.code);
+      callback(result);
+      console.log(`[rejoin] session=${data.code} member=${memberId}`);
+    } catch (err: any) {
+      callback({ error: err.message });
     }
   });
 
@@ -78,6 +102,8 @@ io.on('connection', (socket) => {
     const session = getMemberSession(memberId);
     if (!session) return;
 
+    addSignalEvent(memberId, data.type);
+
     socket.to(session).emit('signal-received', {
       id: memberId,
       name: member.name,
@@ -90,9 +116,11 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log(`[disconnect] ${socket.id}`);
     if (!memberId) return;
-    const result = leaveSession(memberId);
-    if (result && !result.isEmpty) {
-      socket.to(result.code).emit('member-left', { id: memberId });
+    // Mark as disconnected instead of removing — grace period for reconnection
+    markDisconnected(memberId);
+    const session = getMemberSession(memberId);
+    if (session) {
+      socket.to(session).emit('member-disconnected', { id: memberId });
     }
     memberId = null;
   });
