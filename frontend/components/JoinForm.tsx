@@ -18,6 +18,7 @@ export default function JoinForm({ mode }: JoinFormProps) {
   const { requestPermission: requestGeo } = useGeolocation();
   const { requestPermission: requestOrientation } = useDeviceOrientation();
   const setSession = useSessionStore((s) => s.setSession);
+  const addMember = useSessionStore((s) => s.addMember);
 
   const [name, setName] = useState('');
   const [color, setColor] = useState('');
@@ -45,8 +46,11 @@ export default function JoinForm({ mode }: JoinFormProps) {
         ? { name: name.trim(), color }
         : { name: name.trim(), color, code };
 
-    emit(event, payload, (result: { code: string; memberId: string }) => {
+    emit(event, payload, (result: { code: string; memberId: string; members?: any[] }) => {
       setSession(result.code, result.memberId, name.trim(), color);
+      if (result.members) {
+        result.members.forEach((m: any) => addMember(m));
+      }
       router.push(`/session/${result.code}`);
     });
   };
