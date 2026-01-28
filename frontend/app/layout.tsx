@@ -15,8 +15,18 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: "Clubbing Compass",
-  description: "Find your friends",
+  description: "Find your friends at the venue",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover",
+  icons: {
+    icon: '/icon.svg',
+    apple: '/icon.svg',
+  },
+  themeColor: '#000000',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Clubbing Compass',
+  },
 };
 
 export default function RootLayout({
