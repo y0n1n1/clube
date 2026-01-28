@@ -14,7 +14,7 @@ interface JoinFormProps {
 
 export default function JoinForm({ mode }: JoinFormProps) {
   const router = useRouter();
-  const { emit, socket } = useSocket();
+  const { emit } = useSocket();
   const { requestPermission: requestGeo } = useGeolocation();
   const { requestPermission: requestOrientation } = useDeviceOrientation();
   const setSession = useSessionStore((s) => s.setSession);
@@ -43,22 +43,12 @@ export default function JoinForm({ mode }: JoinFormProps) {
     const payload =
       mode === 'create'
         ? { name: name.trim(), color }
-        : { name: name.trim(), color, code: code.toUpperCase() };
+        : { name: name.trim(), color, code };
 
-    socket?.once(
-      mode === 'create' ? 'session-created' : 'session-joined',
-      (data: { code: string; myId: string }) => {
-        setSession(data.code, data.myId, name.trim(), color);
-        router.push(`/session/${data.code}`);
-      },
-    );
-
-    socket?.once('error', (msg: string) => {
-      setError(msg);
-      setLoading(false);
+    emit(event, payload, (result: { code: string; memberId: string }) => {
+      setSession(result.code, result.memberId, name.trim(), color);
+      router.push(`/session/${result.code}`);
     });
-
-    emit(event, payload);
   };
 
   return (
@@ -98,7 +88,7 @@ export default function JoinForm({ mode }: JoinFormProps) {
           type="text"
           placeholder="000000"
           value={code}
-          onChange={(e) => setCode(e.target.value.replace(/[^a-zA-Z0-9]/g, '').slice(0, 6))}
+          onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
           maxLength={6}
           className="w-full bg-zinc-900 border border-zinc-800 text-white rounded-xl px-5 py-4 text-center text-2xl font-semibold font-[family-name:var(--font-geist-mono)] outline-none focus:border-zinc-600 transition-colors placeholder:text-zinc-600"
           style={{ letterSpacing: '0.2em' }}
