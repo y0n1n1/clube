@@ -15,7 +15,7 @@ interface JoinFormProps {
 
 export default function JoinForm({ mode }: JoinFormProps) {
   const router = useRouter();
-  const { emit } = useSocket();
+  const { emit, connected } = useSocket();
   const { requestPermission: requestGeo } = useGeolocation();
   const { requestPermission: requestOrientation } = useDeviceOrientation();
   const setSession = useSessionStore((s) => s.setSession);
@@ -34,6 +34,11 @@ export default function JoinForm({ mode }: JoinFormProps) {
     if (!color) return;
     if (mode === 'join' && code.length !== 6) return;
 
+    if (!connected) {
+      setError('Not connected to server. Please wait...');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -47,7 +52,13 @@ export default function JoinForm({ mode }: JoinFormProps) {
         ? { name: name.trim(), color }
         : { name: name.trim(), color, code };
 
+    const timeout = setTimeout(() => {
+      setLoading(false);
+      setError('Connection timed out. Try again.');
+    }, 10000);
+
     emit(event, payload, (result: { code: string; memberId: string; members?: Member[] }) => {
+      clearTimeout(timeout);
       setSession(result.code, result.memberId, name.trim(), color);
       if (result.members) {
         result.members.forEach((m) => addMember(m));
