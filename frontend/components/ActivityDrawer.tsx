@@ -15,9 +15,13 @@ const SIGNAL_LABELS: Record<string, string> = {
   where: 'Where is everyone?',
   coming: "I'm coming",
   bar: 'At the bar',
+  smoking: 'Smoking area',
+  main: 'Main room',
+  bathroom: 'Bathroom',
+  entrance: 'At the entrance',
   help: 'Need help',
   outside: 'Outside',
-  leaving: 'Leaving soon',
+  leaving: 'Leaving',
 };
 
 function eventText(event: { type: string; memberName: string; data?: { signalType?: string; message?: string } }): string {

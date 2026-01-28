@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAvailableColors } from '@/lib/colors';
 import type { Member } from '@/lib/types';
@@ -23,6 +23,18 @@ export default function JoinForm({ mode }: JoinFormProps) {
 
   const [name, setName] = useState('');
   const [color, setColor] = useState('');
+
+  // Load saved profile from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('cc-profile');
+    if (saved) {
+      try {
+        const { name: savedName, color: savedColor } = JSON.parse(saved);
+        if (savedName) setName(savedName);
+        if (savedColor) setColor(savedColor);
+      } catch { /* ignore */ }
+    }
+  }, []);
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -64,6 +76,7 @@ export default function JoinForm({ mode }: JoinFormProps) {
         result.members.forEach((m) => addMember(m));
       }
       localStorage.setItem('cc-session', JSON.stringify({ code: result.code, memberId: result.memberId }));
+      localStorage.setItem('cc-profile', JSON.stringify({ name: name.trim(), color }));
       router.push(`/session/${result.code}`);
     });
   };

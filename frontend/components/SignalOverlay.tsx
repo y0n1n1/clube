@@ -13,9 +13,13 @@ const PRESET_LABELS: Record<string, string> = {
   where: 'Where is everyone?',
   coming: "I'm coming",
   bar: 'At the bar',
+  smoking: 'Smoking area',
+  main: 'Main room',
+  bathroom: 'Bathroom',
+  entrance: 'At the entrance',
   help: 'Need help',
   outside: 'Outside',
-  leaving: 'Leaving soon',
+  leaving: 'Leaving',
 };
 
 function getSignalText(signal: Signal): string {

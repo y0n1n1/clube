@@ -7,13 +7,20 @@ interface SignalPanelProps {
   onSendSignal: (type: string, message?: string) => void;
 }
 
-const PRESETS = [
-  { type: 'where', label: 'Where is everyone?' },
-  { type: 'coming', label: "I'm coming" },
-  { type: 'bar', label: 'At the bar' },
-  { type: 'help', label: 'Need help' },
-  { type: 'outside', label: 'Outside' },
-  { type: 'leaving', label: 'Leaving soon' },
+const LOCATION_PRESETS = [
+  { type: 'bar', label: 'Bar', color: '#F59E0B' },
+  { type: 'smoking', label: 'Smoking', color: '#6B7280' },
+  { type: 'main', label: 'Main Room', color: '#8B5CF6' },
+  { type: 'outside', label: 'Outside', color: '#3B82F6' },
+  { type: 'bathroom', label: 'Bathroom', color: '#06B6D4' },
+  { type: 'entrance', label: 'Entrance', color: '#10B981' },
+];
+
+const ACTION_PRESETS = [
+  { type: 'coming', label: 'Coming', color: '#22C55E' },
+  { type: 'leaving', label: 'Leaving', color: '#EF4444' },
+  { type: 'where', label: 'Where?', color: '#F97316' },
+  { type: 'help', label: 'Help', color: '#EC4899' },
 ];
 
 export default function SignalPanel({ onSendSignal }: SignalPanelProps) {
@@ -41,7 +48,6 @@ export default function SignalPanel({ onSendSignal }: SignalPanelProps) {
 
   return (
     <>
-      {/* Trigger button — always visible at bottom */}
       <button
         onClick={() => setOpen(true)}
         className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 bg-zinc-900/90 backdrop-blur-sm border border-zinc-700 text-white rounded-full px-8 py-3 text-sm font-semibold active:scale-95 transition-transform"
@@ -49,7 +55,6 @@ export default function SignalPanel({ onSendSignal }: SignalPanelProps) {
         Signal
       </button>
 
-      {/* Full-screen overlay */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -59,7 +64,6 @@ export default function SignalPanel({ onSendSignal }: SignalPanelProps) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            {/* Close area */}
             <button
               onClick={() => { setOpen(false); setCustomText(''); }}
               className="absolute top-5 right-5 text-zinc-500 text-sm z-10"
@@ -67,7 +71,6 @@ export default function SignalPanel({ onSendSignal }: SignalPanelProps) {
               Close
             </button>
 
-            {/* Sent confirmation */}
             <AnimatePresence>
               {sent && (
                 <motion.div
@@ -81,36 +84,53 @@ export default function SignalPanel({ onSendSignal }: SignalPanelProps) {
               )}
             </AnimatePresence>
 
-            {/* Content */}
             {!sent && (
-              <div className="flex-1 flex flex-col justify-center px-6 gap-3 max-w-sm mx-auto w-full">
-                <p className="text-zinc-400 text-sm text-center mb-4">Send a signal to your group</p>
+              <div className="flex-1 flex flex-col justify-center px-6 max-w-sm mx-auto w-full">
+                {/* Location grid */}
+                <p className="text-zinc-500 text-xs uppercase tracking-wider mb-3">I&apos;m at</p>
+                <div className="grid grid-cols-3 gap-2 mb-6">
+                  {LOCATION_PRESETS.map((p) => (
+                    <button
+                      key={p.type}
+                      onClick={() => handleSend(p.type)}
+                      className="rounded-2xl py-4 text-sm font-semibold text-white active:scale-95 transition-transform"
+                      style={{ backgroundColor: `${p.color}25`, border: `1px solid ${p.color}40` }}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
 
-                {PRESETS.map((preset) => (
-                  <button
-                    key={preset.type}
-                    onClick={() => handleSend(preset.type)}
-                    className="w-full bg-zinc-900 border border-zinc-800 text-white rounded-2xl px-6 py-4 text-base text-left active:scale-[0.98] active:bg-zinc-800 transition-all"
-                  >
-                    {preset.label}
-                  </button>
-                ))}
+                {/* Action grid */}
+                <p className="text-zinc-500 text-xs uppercase tracking-wider mb-3">Status</p>
+                <div className="grid grid-cols-2 gap-2 mb-6">
+                  {ACTION_PRESETS.map((p) => (
+                    <button
+                      key={p.type}
+                      onClick={() => handleSend(p.type)}
+                      className="rounded-2xl py-4 text-sm font-semibold text-white active:scale-95 transition-transform"
+                      style={{ backgroundColor: `${p.color}25`, border: `1px solid ${p.color}40` }}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
 
-                {/* Custom message */}
-                <div className="flex gap-2 mt-4">
+                {/* Custom */}
+                <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="Custom message..."
+                    placeholder="Custom..."
                     value={customText}
                     onChange={(e) => setCustomText(e.target.value)}
                     maxLength={100}
                     onKeyDown={(e) => e.key === 'Enter' && handleCustomSend()}
-                    className="flex-1 bg-zinc-900 border border-zinc-800 text-white rounded-2xl px-5 py-4 text-base outline-none focus:border-zinc-600 transition-colors placeholder:text-zinc-600"
+                    className="flex-1 bg-zinc-900 border border-zinc-800 text-white rounded-2xl px-5 py-3 text-sm outline-none focus:border-zinc-600 transition-colors placeholder:text-zinc-600"
                   />
                   <button
                     onClick={handleCustomSend}
                     disabled={!customText.trim()}
-                    className="bg-white text-black rounded-2xl px-5 py-4 text-sm font-semibold disabled:opacity-30 active:scale-95 transition-all"
+                    className="bg-white text-black rounded-2xl px-5 py-3 text-sm font-semibold disabled:opacity-30 active:scale-95 transition-all"
                   >
                     Send
                   </button>
