@@ -20,6 +20,8 @@ interface SessionStore {
   addSignal: (signal: Signal) => void;
   clearOldSignals: (maxAgeMs?: number) => void;
   addEvent: (event: SessionEvent) => void;
+  focusedMemberId: string | null;
+  setFocusedMember: (id: string | null) => void;
   reset: () => void;
 }
 
@@ -31,6 +33,7 @@ const initialState = {
   members: {} as Record<string, Member>,
   signals: [] as Signal[],
   events: [] as SessionEvent[],
+  focusedMemberId: null as string | null,
 };
 
 export const useSessionStore = create<SessionStore>((set) => ({
@@ -76,6 +79,9 @@ export const useSessionStore = create<SessionStore>((set) => ({
 
   addEvent: (event) =>
     set((s) => ({ events: [...s.events, event] })),
+
+  focusedMemberId: null,
+  setFocusedMember: (id) => set({ focusedMemberId: id }),
 
   reset: () => set(initialState),
 }));

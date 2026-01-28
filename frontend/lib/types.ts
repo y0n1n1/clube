@@ -10,7 +10,8 @@ export interface Signal {
   id: string;
   name: string;
   color: string;
-  type: 'where' | 'coming';
+  type: string;
+  message?: string;
   timestamp: number;
 }
 
@@ -25,7 +26,7 @@ export interface SessionEvent {
   memberId: string;
   memberName: string;
   memberColor: string;
-  data?: { signalType?: 'where' | 'coming' };
+  data?: { signalType?: string; message?: string };
   timestamp: number;
 }
 

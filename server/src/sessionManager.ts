@@ -5,7 +5,7 @@ export interface SessionEvent {
   memberId: string;
   memberName: string;
   memberColor: string;
-  data?: { signalType?: 'where' | 'coming' };
+  data?: { signalType?: string; message?: string };
   timestamp: number;
 }
 
@@ -141,14 +141,14 @@ export function cleanupDisconnected(): Array<{ code: string; memberId: string; m
   return removed;
 }
 
-export function addSignalEvent(memberId: string, signalType: 'where' | 'coming'): string | null {
+export function addSignalEvent(memberId: string, signalType: string, message?: string): string | null {
   const code = memberToSession.get(memberId);
   if (!code) return null;
   const session = sessions.get(code);
   if (!session) return null;
   const member = session.members.get(memberId);
   if (!member) return null;
-  addEvent(session, { type: 'signal', memberId, memberName: member.name, memberColor: member.color, data: { signalType } });
+  addEvent(session, { type: 'signal', memberId, memberName: member.name, memberColor: member.color, data: { signalType, message } });
   return code;
 }
 

@@ -6,7 +6,8 @@ import { useSocket } from '@/hooks/useSocket';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useSessionStore } from '@/stores/session';
 import CompassView from '@/components/CompassView';
-import SignalBar from '@/components/SignalBar';
+import SignalPanel from '@/components/SignalPanel';
+import OrbFocusView from '@/components/OrbFocusView';
 import SignalOverlay from '@/components/SignalOverlay';
 import MemberDots from '@/components/MemberDots';
 import ActivityDrawer from '@/components/ActivityDrawer';
@@ -91,9 +92,9 @@ export default function SessionPage() {
     const onLocationUpdate = (data: { id: string; lat: number; lng: number }) => {
       updateMemberLocation(data.id, data.lat, data.lng);
     };
-    const onSignalReceived = (data: { id: string; name: string; color: string; type: 'where' | 'coming' }) => {
-      addSignal({ id: data.id, name: data.name, color: data.color, type: data.type, timestamp: Date.now() });
-      addEvent({ type: 'signal', memberId: data.id, memberName: data.name, memberColor: data.color, data: { signalType: data.type }, timestamp: Date.now() });
+    const onSignalReceived = (data: { id: string; name: string; color: string; type: string; message?: string }) => {
+      addSignal({ id: data.id, name: data.name, color: data.color, type: data.type, message: data.message, timestamp: Date.now() });
+      addEvent({ type: 'signal', memberId: data.id, memberName: data.name, memberColor: data.color, data: { signalType: data.type, message: data.message }, timestamp: Date.now() });
     };
 
     socket.on('member-joined', onMemberJoined);
@@ -122,10 +123,13 @@ export default function SessionPage() {
     return () => clearInterval(interval);
   }, [lat, lng, socket, emit]);
 
+  const focusedMemberId = useSessionStore((s) => s.focusedMemberId);
+  const setFocusedMember = useSessionStore((s) => s.setFocusedMember);
+
   // Signal sending
   const handleSendSignal = useCallback(
-    (type: 'where' | 'coming') => {
-      emit('send-signal', { type });
+    (type: string, message?: string) => {
+      emit('send-signal', { type, message });
     },
     [emit],
   );
@@ -178,8 +182,17 @@ export default function SessionPage() {
       <CompassView myLat={lat!} myLng={lng!} />
       <MemberDots />
       <ActivityDrawer />
-      <SignalBar onSendSignal={handleSendSignal} />
+      <SignalPanel onSendSignal={handleSendSignal} />
       <SignalOverlay signal={latestSignal} onDismiss={handleDismissSignal} />
+      {focusedMemberId && lat != null && lng != null && (
+        <OrbFocusView
+          memberId={focusedMemberId}
+          myLat={lat}
+          myLng={lng}
+          onClose={() => setFocusedMember(null)}
+          onSignal={(type) => handleSendSignal(type)}
+        />
+      )}
     </div>
   );
 }

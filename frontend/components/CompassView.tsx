@@ -40,16 +40,18 @@ function MemberOrb({
   radiusPx: number;
 }) {
   const member = useSessionStore((s) => s.members[memberId]);
+  const setFocusedMember = useSessionStore((s) => s.setFocusedMember);
   const { angle, distance } = useBearing(myLat, myLng, member.lat, member.lng, heading);
   const props = getOrbProps(distance);
   const { x, y } = polarToXY(angle, distance, radiusPx);
 
   return (
     <motion.div
-      className="absolute"
+      className="absolute cursor-pointer"
       style={{ left: '50%', top: '50%' }}
       animate={{ x, y }}
       transition={orbSpring}
+      onClick={() => setFocusedMember(memberId)}
     >
       <Orb
         color={member.color}

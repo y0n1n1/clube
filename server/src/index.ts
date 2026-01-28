@@ -95,20 +95,21 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('send-signal', (data: { type: 'where' | 'coming' }) => {
+  socket.on('send-signal', (data: { type: string; message?: string }) => {
     if (!memberId) return;
     const member = findMemberBySocketId(socket.id);
     if (!member) return;
     const session = getMemberSession(memberId);
     if (!session) return;
 
-    addSignalEvent(memberId, data.type);
+    addSignalEvent(memberId, data.type, data.message);
 
     socket.to(session).emit('signal-received', {
       id: memberId,
       name: member.name,
       color: member.color,
       type: data.type,
+      message: data.message,
     });
     console.log(`[signal] ${data.type} from ${member.name}`);
   });

@@ -11,16 +11,29 @@ function timeAgo(ts: number): string {
   return `${Math.floor(diff / 3600)}h ago`;
 }
 
-function eventText(event: { type: string; memberName: string; data?: { signalType?: string } }): string {
+const SIGNAL_LABELS: Record<string, string> = {
+  where: 'Where is everyone?',
+  coming: "I'm coming",
+  bar: 'At the bar',
+  help: 'Need help',
+  outside: 'Outside',
+  leaving: 'Leaving soon',
+};
+
+function eventText(event: { type: string; memberName: string; data?: { signalType?: string; message?: string } }): string {
   switch (event.type) {
     case 'member-joined':
       return `${event.memberName} joined`;
     case 'member-left':
       return `${event.memberName} left`;
-    case 'signal':
-      return event.data?.signalType === 'coming'
-        ? `${event.memberName}: I'm coming!`
-        : `${event.memberName}: Where is everyone?`;
+    case 'signal': {
+      const st = event.data?.signalType;
+      if (st === 'custom' && event.data?.message) {
+        return `${event.memberName}: ${event.data.message}`;
+      }
+      const label = st ? SIGNAL_LABELS[st] || st : 'signal';
+      return `${event.memberName}: ${label}`;
+    }
     default:
       return event.memberName;
   }

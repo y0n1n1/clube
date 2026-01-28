@@ -9,10 +9,21 @@ interface SignalOverlayProps {
   onDismiss: () => void;
 }
 
-const EMOJI: Record<Signal['type'], string> = {
-  where: '❓',
-  coming: '👋',
+const PRESET_LABELS: Record<string, string> = {
+  where: 'Where is everyone?',
+  coming: "I'm coming",
+  bar: 'At the bar',
+  help: 'Need help',
+  outside: 'Outside',
+  leaving: 'Leaving soon',
 };
+
+function getSignalText(signal: Signal): string {
+  if (signal.type === 'custom' && signal.message) {
+    return signal.message;
+  }
+  return PRESET_LABELS[signal.type] || signal.type;
+}
 
 export default function SignalOverlay({ signal, onDismiss }: SignalOverlayProps) {
   useEffect(() => {
@@ -36,8 +47,12 @@ export default function SignalOverlay({ signal, onDismiss }: SignalOverlayProps)
             background: `radial-gradient(circle at center, ${signal.color}30 0%, rgba(0,0,0,0.85) 70%)`,
           }}
         >
-          <span className="text-6xl mb-4">{EMOJI[signal.type]}</span>
-          <p className="text-white text-2xl font-semibold">{signal.name}</p>
+          <div
+            className="w-16 h-16 rounded-full mb-6"
+            style={{ backgroundColor: signal.color, boxShadow: `0 0 40px ${signal.color}60` }}
+          />
+          <p className="text-white text-xl font-semibold mb-2">{signal.name}</p>
+          <p className="text-zinc-300 text-base text-center px-8">{getSignalText(signal)}</p>
         </motion.div>
       )}
     </AnimatePresence>
